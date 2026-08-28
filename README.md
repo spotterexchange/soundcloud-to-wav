@@ -1,16 +1,29 @@
 # sc2wav — SoundCloud → WAV
 
-Download SoundCloud tracks, playlists, and user pages as **WAV** files. Use it
-three ways:
+Download SoundCloud tracks, playlists, and user pages as **WAV** files.
 
-- ☁️ **Hosted web app** — deploy once, then just visit a URL (`Dockerfile` + `render.yaml`)
-- 🖥️ **Local web UI** — paste a link in your browser and click Download (`webapp.py`)
-- ⌨️ **Command line** — for scripting and batch jobs (`sc2wav.py`)
+### 👉 Simplest way (no terminal, no commands)
 
-Both are thin, friendly wrappers around two well-established tools:
+You need **[Python 3.9+](https://www.python.org/downloads/)** installed once
+(on Windows, tick *"Add Python to PATH"* during install). Then just **double-click**:
 
-- **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — fetches the audio from SoundCloud
-- **[ffmpeg](https://ffmpeg.org/)** — decodes it to WAV
+- **macOS / Linux:** `Start sc2wav (Mac-Linux).command`
+- **Windows:** `Start sc2wav (Windows).bat`
+
+The first run sets everything up (about a minute); after that it's quick. It
+opens a page in your browser — paste a SoundCloud link, click **Download**, and
+the WAV saves to your Downloads folder. Drag it onto your USB from there. Close
+the window to stop.
+
+> On macOS, the first time you may need to right-click the `.command` file →
+> **Open** to get past the security prompt.
+
+Other ways to use it — a [hosted web app](#2-host-it-on-the-web-no-local-machine-needed),
+the [command line](#5-command-line-options) — are covered below.
+
+Under the hood it wraps two well-established tools:
+**[yt-dlp](https://github.com/yt-dlp/yt-dlp)** (fetches the audio) and
+**[ffmpeg](https://ffmpeg.org/)** (decodes it to WAV — installed automatically).
 
 > ⚠️ **Please only download audio you have the right to.** Many SoundCloud
 > artists enable downloads or release under permissive licenses — respect their

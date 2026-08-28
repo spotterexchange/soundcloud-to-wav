@@ -183,17 +183,31 @@ def main() -> int:
         help="port (default: $PORT or 5000)",
     )
     parser.add_argument("--debug", action="store_true", help="enable Flask debug mode")
+    parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="don't open a browser window automatically",
+    )
     args = parser.parse_args()
 
     if not find_ffmpeg():
         sys.stderr.write(
-            "warning: ffmpeg was not found on your PATH. The UI will load, but "
-            "downloads will fail until ffmpeg is installed.\n"
+            "warning: ffmpeg was not found. Run 'pip install -r requirements.txt' "
+            "so the bundled ffmpeg is available, or install ffmpeg system-wide.\n"
         )
 
     url = f"http://{args.host}:{args.port}"
     print(f"sc2wav web UI running at  {url}")
-    print("Open that address in your browser. Press Ctrl+C to stop.")
+    print("Your browser should open automatically. Press Ctrl+C here to stop.")
+
+    # Pop the page open once the server is up, unless suppressed or the
+    # Flask debug reloader is spawning the parent process.
+    if not args.no_browser and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        import threading
+        import webbrowser
+
+        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+
     app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
     return 0
 
