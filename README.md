@@ -11,9 +11,13 @@ You need **[Python 3.9+](https://www.python.org/downloads/)** installed once
 - **Windows:** `Start sc2wav (Windows).bat`
 
 The first run sets everything up (about a minute); after that it's quick. It
-opens a page in your browser — paste a SoundCloud link, click **Download**, and
-the WAV saves to your Downloads folder. Drag it onto your USB from there. Close
-the window to stop.
+opens a page in your browser — paste a SoundCloud link and click **Download**.
+
+**Saving to your USB:** in Chrome or Edge, click **📁 Save to my USB / a folder…**
+and pick your USB drive — WAVs are written straight there. In other browsers the
+button doesn't appear and files go to your Downloads folder to drag over (or turn
+on your browser's *"Ask where to save each file"* setting to choose the USB each
+time). Close the window to stop.
 
 > On macOS, the first time you may need to right-click the `.command` file →
 > **Open** to get past the security prompt.
@@ -32,11 +36,12 @@ on your own machine.
    python webapp.py
    ```
 4. A prompt pops up — click **Open in Browser** (or use the **PORTS** tab, port
-   5000). Paste a SoundCloud link, click **Download**, and the WAV saves to your
-   computer's Downloads folder. Drag it onto your USB from there.
+   5000). Paste a SoundCloud link and click **Download**. In Chrome/Edge you can
+   click **📁 Save to my USB / a folder…** to write straight to your USB;
+   otherwise the WAV saves to your Downloads folder to drag over.
 
-The download reaches your own computer because the page runs in your browser —
-even though the work happens in the cloud. Codespaces include a
+The download reaches your own computer — including the folder/USB you pick —
+because the page runs in your browser, even though the work happens in the cloud. Codespaces include a
 [free monthly quota](https://docs.github.com/billing/managing-billing-for-github-codespaces/about-billing-for-github-codespaces);
 stop the Codespace when you're done so it doesn't use hours.
 

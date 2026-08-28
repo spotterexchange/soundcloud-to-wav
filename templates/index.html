@@ -79,6 +79,14 @@
     button:hover:not(:disabled) { background: var(--accent-dark); }
     button:active:not(:disabled) { transform: translateY(1px); }
     button:disabled { opacity: .55; cursor: default; }
+    .folder { margin-top: 14px; display: flex; align-items: center; gap: 11px; flex-wrap: wrap; }
+    button.secondary {
+      background: #f2f2f7; color: var(--ink);
+      padding: 9px 14px; font-size: 13.5px; font-weight: 600;
+    }
+    button.secondary:hover:not(:disabled) { background: #e7e7ef; }
+    .folder-name { font-size: 13px; color: var(--muted); }
+    .folder-name.set { color: var(--ok); font-weight: 600; }
     .status { margin-top: 18px; font-size: 14px; min-height: 22px; line-height: 1.45; }
     .status.ok  { color: var(--ok); }
     .status.err { color: var(--err); }
@@ -119,10 +127,16 @@
       </div>
     </form>
 
+    <div id="folderRow" class="folder" hidden>
+      <button id="pickFolder" type="button" class="secondary">📁 Save to my USB / a folder…</button>
+      <span id="folderName" class="folder-name">Files go to your Downloads folder</span>
+    </div>
+
     <div id="status" class="status" role="status" aria-live="polite"></div>
 
     <p class="foot">
-      WAV files are large (~10&nbsp;MB/min) and save to your browser's Downloads folder — move them to your USB from there.
+      WAV files are large (~10&nbsp;MB/min). Pick your USB folder above to save straight to it,
+      or leave it and files land in your Downloads folder to drag over.
       A playlist arrives as a single <code>.zip</code>.
       Please only download audio you have the right to.
     </p>
@@ -133,10 +147,59 @@
     const input = document.getElementById('url');
     const button = document.getElementById('go');
     const status = document.getElementById('status');
+    const folderRow = document.getElementById('folderRow');
+    const pickFolder = document.getElementById('pickFolder');
+    const folderName = document.getElementById('folderName');
+
+    // The File System Access API lets the browser write straight to a folder
+    // the user picks (e.g. a USB drive). Chromium-based browsers only.
+    const canPickFolder = typeof window.showDirectoryPicker === 'function';
+    let dirHandle = null;
+
+    if (canPickFolder) {
+      folderRow.hidden = false;
+    }
 
     function setStatus(kind, html) {
       status.className = 'status ' + kind;
       status.innerHTML = html;
+    }
+
+    pickFolder.addEventListener('click', async () => {
+      try {
+        dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        folderName.textContent = 'Saving to: ' + dirHandle.name;
+        folderName.classList.add('set');
+      } catch (err) {
+        // User dismissed the picker — leave the current choice as-is.
+      }
+    });
+
+    async function ensureWritePermission(handle) {
+      const opts = { mode: 'readwrite' };
+      if ((await handle.queryPermission(opts)) === 'granted') return true;
+      return (await handle.requestPermission(opts)) === 'granted';
+    }
+
+    async function saveToFolder(blob, filename) {
+      if (!(await ensureWritePermission(dirHandle))) {
+        throw new Error('Permission to write to that folder was denied.');
+      }
+      const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    }
+
+    function downloadToBrowser(blob, filename) {
+      const objectUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = objectUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objectUrl);
     }
 
     form.addEventListener('submit', async (e) => {
@@ -169,15 +232,21 @@
         if (match) filename = decodeURIComponent(match[1]);
 
         const blob = await resp.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = objectUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(objectUrl);
 
+        if (dirHandle) {
+          try {
+            await saveToFolder(blob, filename);
+            setStatus('ok', '✓ Saved <strong>' + filename + '</strong> to <strong>' + dirHandle.name + '</strong>.');
+            return;
+          } catch (err) {
+            // Fall back to a normal download if writing to the folder failed.
+            downloadToBrowser(blob, filename);
+            setStatus('err', '✕ Couldn’t write to the folder (' + err.message + '). Saved to Downloads instead.');
+            return;
+          }
+        }
+
+        downloadToBrowser(blob, filename);
         setStatus('ok', '✓ Saved <strong>' + filename + '</strong> to your Downloads.');
       } catch (err) {
         setStatus('err', '✕ Network error: ' + err.message);
