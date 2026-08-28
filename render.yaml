@@ -1,0 +1,15 @@
+# Render.com blueprint — deploys the sc2wav web app from this repo.
+# In Render: New > Blueprint, connect this GitHub repo, and it reads this file.
+# ffmpeg comes from the Dockerfile, so nothing needs installing by hand.
+services:
+  - type: web
+    name: sc2wav
+    runtime: docker
+    plan: free
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # Set a value in the Render dashboard to password-protect the site.
+      # Leave blank for open (public) access.
+      - key: SC2WAV_ACCESS_CODE
+        sync: false

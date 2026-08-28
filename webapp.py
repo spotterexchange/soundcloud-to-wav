@@ -14,7 +14,9 @@ Terms of Use.
 
 from __future__ import annotations
 
+import hmac
 import io
+import os
 import shutil
 import sys
 import tempfile
@@ -22,7 +24,15 @@ import zipfile
 from pathlib import Path
 
 try:
-    from flask import Flask, after_this_request, jsonify, render_template, request, send_file
+    from flask import (
+        Flask,
+        Response,
+        after_this_request,
+        jsonify,
+        render_template,
+        request,
+        send_file,
+    )
 except ImportError:  # pragma: no cover
     sys.stderr.write(
         "error: Flask is not installed.\n"
@@ -47,6 +57,32 @@ app = Flask(__name__)
 # WAV files can be large; allow a generous response. (This limits uploads, not
 # downloads, but keep it explicit.)
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024
+
+# Optional password protection for a publicly hosted instance. Set the
+# SC2WAV_ACCESS_CODE environment variable and the site prompts for it (HTTP
+# Basic auth — any username, that value as the password). Leave it unset for
+# open access.
+ACCESS_CODE = os.environ.get("SC2WAV_ACCESS_CODE", "").strip()
+
+
+@app.before_request
+def require_access_code():
+    if not ACCESS_CODE or request.path == "/healthz":
+        return None
+    auth = request.authorization
+    if auth is None or not hmac.compare_digest(auth.password or "", ACCESS_CODE):
+        return Response(
+            "Authentication required.",
+            401,
+            {"WWW-Authenticate": 'Basic realm="sc2wav"'},
+        )
+    return None
+
+
+@app.get("/healthz")
+def healthz():
+    """Lightweight health check for hosting platforms."""
+    return jsonify(status="ok", ffmpeg=find_ffmpeg() is not None)
 
 
 @app.get("/")
@@ -140,7 +176,12 @@ def main() -> int:
 
     parser = argparse.ArgumentParser(description="Run the sc2wav web UI.")
     parser.add_argument("--host", default="127.0.0.1", help="bind address (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=5000, help="port (default: 5000)")
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=int(os.environ.get("PORT", 5000)),
+        help="port (default: $PORT or 5000)",
+    )
     parser.add_argument("--debug", action="store_true", help="enable Flask debug mode")
     args = parser.parse_args()
 

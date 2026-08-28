@@ -1,9 +1,10 @@
 # sc2wav — SoundCloud → WAV
 
-Download SoundCloud tracks, playlists, and user pages as **WAV** files — for
-example, straight onto a USB drive. Use it two ways:
+Download SoundCloud tracks, playlists, and user pages as **WAV** files. Use it
+three ways:
 
-- 🖥️ **Web UI** — paste a link in your browser and click Download (`webapp.py`)
+- ☁️ **Hosted web app** — deploy once, then just visit a URL (`Dockerfile` + `render.yaml`)
+- 🖥️ **Local web UI** — paste a link in your browser and click Download (`webapp.py`)
 - ⌨️ **Command line** — for scripting and batch jobs (`sc2wav.py`)
 
 Both are thin, friendly wrappers around two well-established tools:
@@ -55,25 +56,63 @@ pip install -r requirements.txt
 
 ---
 
-## 2. Use the web UI (easiest)
+## 2. Host it on the web (no local machine needed)
 
-Start the server:
+Deploy once and get a URL you can open from anywhere — the server has ffmpeg
+built in, so there's nothing to install or run locally.
+
+### Easiest: Render (free tier, deploys from GitHub)
+
+1. Push this repo to GitHub (already done if you're reading this there).
+2. Go to [Render](https://render.com) → **New → Blueprint**.
+3. Connect this repository. Render reads [`render.yaml`](render.yaml) and builds
+   the [`Dockerfile`](Dockerfile) automatically.
+4. *(Recommended)* Set an environment variable **`SC2WAV_ACCESS_CODE`** to any
+   password, so only you can use the site. Leave it blank for open public access.
+5. Click **Apply**. In a few minutes you get a URL like
+   `https://sc2wav.onrender.com` — open it, paste a link, download WAVs.
+
+> On the free tier the app sleeps after inactivity and takes ~30s to wake on the
+> first request. Very long playlists may exceed the platform's request timeout.
+
+### Any Docker host (Fly.io, Railway, a VPS, etc.)
+
+The included [`Dockerfile`](Dockerfile) runs anywhere containers do:
+
+```bash
+docker build -t sc2wav .
+docker run -p 8000:8000 -e SC2WAV_ACCESS_CODE=yourpassword sc2wav
+# then open http://localhost:8000
+```
+
+On Fly.io: `fly launch` (it detects the Dockerfile), then
+`fly secrets set SC2WAV_ACCESS_CODE=yourpassword`.
+On Railway: **New → Deploy from GitHub repo** — it builds the Dockerfile; add the
+same variable under **Variables**.
+
+**Access code:** when `SC2WAV_ACCESS_CODE` is set, the site asks for a password
+(any username, that value as the password). Since a hosted downloader is a public
+URL, setting one is strongly recommended.
+
+**Health check:** `GET /healthz` returns `{"status":"ok"}` for uptime monitors.
+
+---
+
+## 3. Or run the web UI locally
+
+Prefer to keep it on your own machine? Start the server:
 
 ```bash
 python webapp.py
 ```
 
-It prints a local address (default <http://127.0.0.1:5000>). Open it in your
-browser, paste a SoundCloud link, and click **Download**. The WAV lands in your
-browser's Downloads folder — drag it onto your USB drive from there. A playlist
-comes back as a single `.zip` of WAVs.
-
-Options: `python webapp.py --port 8000` to change the port. The server binds to
-localhost only and is intended to run on your own machine.
+It prints a local address (default <http://127.0.0.1:5000>). Open it, paste a
+SoundCloud link, and click **Download**. A playlist comes back as a single
+`.zip` of WAVs. Change the port with `python webapp.py --port 8000`.
 
 ---
 
-## 3. Use the command line
+## 4. Use the command line
 
 Basic — download a single track into the current folder:
 
@@ -118,7 +157,7 @@ python sc2wav.py -o /Volumes/MY_USB/Music --archive archive.txt https://soundclo
 
 ---
 
-## 4. Command-line options
+## 5. Command-line options
 
 | Option | What it does |
 |--------|--------------|

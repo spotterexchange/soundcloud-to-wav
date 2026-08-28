@@ -6,3 +6,7 @@ yt-dlp>=2024.1.0
 # Flask powers the browser UI (webapp.py). Only needed for the web interface;
 # the sc2wav.py command-line tool does not require it.
 Flask>=3.0.0
+
+# gunicorn is the production web server used when the app is hosted (Docker /
+# Render / etc.). Not needed for local `python webapp.py`.
+gunicorn>=21.2.0

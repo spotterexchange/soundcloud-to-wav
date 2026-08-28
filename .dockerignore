@@ -1,0 +1,15 @@
+.git
+.gitignore
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+*.wav
+*.mp3
+*.m4a
+*.opus
+downloads/
+archive.txt
+README.md
+LICENSE
