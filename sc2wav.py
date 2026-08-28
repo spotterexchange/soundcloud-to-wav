@@ -33,8 +33,21 @@ except ImportError:  # pragma: no cover - handled at runtime
 # helpers
 # --------------------------------------------------------------------------- #
 def find_ffmpeg() -> str | None:
-    """Return the path to an ffmpeg binary, or None if it isn't on PATH."""
-    return shutil.which("ffmpeg")
+    """Return the path to an ffmpeg binary, or None if one can't be found.
+
+    Prefers a system ffmpeg on PATH. If none is installed, falls back to the
+    static binary bundled by the ``imageio-ffmpeg`` pip package (if present),
+    so users don't have to install ffmpeg by hand.
+    """
+    system = shutil.which("ffmpeg")
+    if system:
+        return system
+    try:
+        import imageio_ffmpeg
+
+        return imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        return None
 
 
 def looks_like_soundcloud(url: str) -> bool:
@@ -238,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
 
     opts = build_options(
         output_dir=output_dir,
-        ffmpeg_location=args.ffmpeg,  # only override when user supplied one
+        ffmpeg_location=ffmpeg_location,  # resolved above (PATH or bundled)
         naming=args.naming,
         archive=archive,
         overwrite=args.overwrite,

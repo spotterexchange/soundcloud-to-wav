@@ -124,7 +124,7 @@ def download():
 
     opts = build_options(
         output_dir=workdir,
-        ffmpeg_location=None,          # ffmpeg is on PATH; found above
+        ffmpeg_location=ffmpeg_location,   # PATH or the bundled static binary
         naming="%(uploader)s - %(title)s.%(ext)s",
         archive=None,
         overwrite=True,

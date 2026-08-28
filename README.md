@@ -20,27 +20,7 @@ Both are thin, friendly wrappers around two well-established tools:
 
 ## 1. Install
 
-You need **Python 3.9+**, **ffmpeg**, and the Python dependency.
-
-### a) Install ffmpeg
-
-| OS | Command |
-|----|---------|
-| macOS (Homebrew) | `brew install ffmpeg` |
-| Windows (winget) | `winget install Gyan.FFmpeg` |
-| Windows (choco)  | `choco install ffmpeg` |
-| Debian / Ubuntu  | `sudo apt install ffmpeg` |
-| Fedora           | `sudo dnf install ffmpeg` |
-
-Check it's on your PATH:
-
-```bash
-ffmpeg -version
-```
-
-If it isn't, you can point sc2wav at it directly with `--ffmpeg`.
-
-### b) Install the Python dependency
+You need **Python 3.9+**. Then install the dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -53,6 +33,26 @@ python -m venv .venv
 source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+**That's it — ffmpeg is handled for you.** A static ffmpeg build ships with the
+`imageio-ffmpeg` dependency and is used automatically, so there's no separate
+install step.
+
+<details>
+<summary>Optional: use a system ffmpeg instead</summary>
+
+If you'd rather use a system ffmpeg (slightly faster startup), install it and
+it'll be preferred automatically:
+
+| OS | Command |
+|----|---------|
+| macOS (Homebrew) | `brew install ffmpeg` |
+| Windows (winget) | `winget install Gyan.FFmpeg` |
+| Debian / Ubuntu  | `sudo apt install ffmpeg` |
+| Fedora           | `sudo dnf install ffmpeg` |
+
+You can also point sc2wav at a specific binary with `--ffmpeg PATH`.
+</details>
 
 ---
 
