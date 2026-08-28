@@ -1,0 +1,4 @@
+# sc2wav dependencies
+# yt-dlp handles fetching audio from SoundCloud. It is updated often to keep up
+# with site changes, so keep it reasonably fresh.
+yt-dlp>=2024.1.0
