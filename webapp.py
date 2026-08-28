@@ -137,10 +137,22 @@ def download():
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
     except yt_dlp.utils.DownloadError as exc:
-        msg = str(exc)
-        # Trim yt-dlp's "please report this issue" boilerplate for readability.
-        msg = msg.split(";")[0].replace("ERROR:", "").strip()
-        return jsonify(error=f"Download failed: {msg}"), 502
+        raw = str(exc)
+        low = raw.lower()
+        if "drm" in low:
+            friendly = (
+                "This track is DRM-protected (a licensed / SoundCloud Go+ track), "
+                "so it can't be downloaded. Try a track the artist has made freely "
+                "available."
+            )
+        elif "not available" in low or "private" in low or "404" in low:
+            friendly = "This track isn't available to download — it may be private or removed."
+        elif "requested format" in low or "no video formats" in low:
+            friendly = "No downloadable audio was found for that link."
+        else:
+            # Trim yt-dlp's "please report this issue" boilerplate for readability.
+            friendly = "Download failed: " + raw.split(";")[0].replace("ERROR:", "").strip()
+        return jsonify(error=friendly), 502
     except Exception as exc:  # pragma: no cover - defensive
         return jsonify(error=f"Unexpected error: {exc}"), 500
 
