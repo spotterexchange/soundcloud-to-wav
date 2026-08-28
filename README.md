@@ -1,9 +1,12 @@
 # sc2wav — SoundCloud → WAV
 
-A small command-line tool that downloads SoundCloud tracks, playlists, and user
-pages and saves them as **WAV** files — for example, straight onto a USB drive.
+Download SoundCloud tracks, playlists, and user pages as **WAV** files — for
+example, straight onto a USB drive. Use it two ways:
 
-It's a thin, friendly wrapper around two well-established tools:
+- 🖥️ **Web UI** — paste a link in your browser and click Download (`webapp.py`)
+- ⌨️ **Command line** — for scripting and batch jobs (`sc2wav.py`)
+
+Both are thin, friendly wrappers around two well-established tools:
 
 - **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** — fetches the audio from SoundCloud
 - **[ffmpeg](https://ffmpeg.org/)** — decodes it to WAV
@@ -52,7 +55,25 @@ pip install -r requirements.txt
 
 ---
 
-## 2. Use
+## 2. Use the web UI (easiest)
+
+Start the server:
+
+```bash
+python webapp.py
+```
+
+It prints a local address (default <http://127.0.0.1:5000>). Open it in your
+browser, paste a SoundCloud link, and click **Download**. The WAV lands in your
+browser's Downloads folder — drag it onto your USB drive from there. A playlist
+comes back as a single `.zip` of WAVs.
+
+Options: `python webapp.py --port 8000` to change the port. The server binds to
+localhost only and is intended to run on your own machine.
+
+---
+
+## 3. Use the command line
 
 Basic — download a single track into the current folder:
 
@@ -97,7 +118,7 @@ python sc2wav.py -o /Volumes/MY_USB/Music --archive archive.txt https://soundclo
 
 ---
 
-## 3. Options
+## 4. Command-line options
 
 | Option | What it does |
 |--------|--------------|

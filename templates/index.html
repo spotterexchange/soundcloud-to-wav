@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>sc2wav — SoundCloud to WAV</title>
+  <style>
+    :root {
+      --bg1: #2b1055;
+      --bg2: #7597de;
+      --card: #ffffff;
+      --ink: #1c1c28;
+      --muted: #6b6b7b;
+      --accent: #ff5500;      /* SoundCloud orange */
+      --accent-dark: #e64a00;
+      --ok: #1f9d55;
+      --err: #d64545;
+      --border: #e6e6ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(160deg, var(--bg1), var(--bg2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: var(--card);
+      width: 100%;
+      max-width: 520px;
+      border-radius: 18px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.30);
+      padding: 34px 32px 28px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .logo .dot {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: var(--accent);
+      display: grid; place-items: center;
+      color: #fff; font-size: 17px;
+    }
+    h1 { font-size: 21px; margin: 0; letter-spacing: -0.2px; }
+    .sub { color: var(--muted); font-size: 14px; margin: 6px 0 22px; line-height: 1.45; }
+    label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+    .row { display: flex; gap: 10px; }
+    input[type=url] {
+      flex: 1;
+      padding: 13px 14px;
+      font-size: 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 11px;
+      outline: none;
+      transition: border-color .15s;
+      min-width: 0;
+    }
+    input[type=url]:focus { border-color: var(--accent); }
+    button {
+      border: 0;
+      background: var(--accent);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      padding: 0 20px;
+      border-radius: 11px;
+      cursor: pointer;
+      transition: background .15s, transform .05s;
+      white-space: nowrap;
+    }
+    button:hover:not(:disabled) { background: var(--accent-dark); }
+    button:active:not(:disabled) { transform: translateY(1px); }
+    button:disabled { opacity: .55; cursor: default; }
+    .status { margin-top: 18px; font-size: 14px; min-height: 22px; line-height: 1.45; }
+    .status.ok  { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .status.busy { color: var(--muted); display: flex; align-items: center; gap: 9px; }
+    .spinner {
+      width: 16px; height: 16px; border-radius: 50%;
+      border: 2.5px solid #d9d9e3; border-top-color: var(--accent);
+      animation: spin .7s linear infinite; flex: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .warn {
+      margin: 0 0 18px; padding: 11px 13px;
+      background: #fff5e6; border: 1px solid #ffd699;
+      color: #8a5300; border-radius: 10px; font-size: 13px; line-height: 1.45;
+    }
+    .foot { margin-top: 22px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    code { background: #f2f2f7; padding: 1px 5px; border-radius: 5px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo"><span class="dot">☁</span><h1>SoundCloud → WAV</h1></div>
+    <p class="sub">Paste a SoundCloud track or playlist link and download it as a WAV file.</p>
+
+    {% if not ffmpeg_ok %}
+    <div class="warn">
+      ⚠️ <strong>ffmpeg wasn't found</strong> on this machine — downloads will fail until it's installed.
+      Try <code>brew install ffmpeg</code>, <code>winget install Gyan.FFmpeg</code>, or
+      <code>sudo apt install ffmpeg</code>, then restart this app.
+    </div>
+    {% endif %}
+
+    <form id="form" autocomplete="off">
+      <label for="url">SoundCloud link</label>
+      <div class="row">
+        <input id="url" name="url" type="url" placeholder="https://soundcloud.com/artist/track" required>
+        <button id="go" type="submit">Download</button>
+      </div>
+    </form>
+
+    <div id="status" class="status" role="status" aria-live="polite"></div>
+
+    <p class="foot">
+      WAV files are large (~10&nbsp;MB/min) and save to your browser's Downloads folder — move them to your USB from there.
+      A playlist arrives as a single <code>.zip</code>.
+      Please only download audio you have the right to.
+    </p>
+  </main>
+
+  <script>
+    const form = document.getElementById('form');
+    const input = document.getElementById('url');
+    const button = document.getElementById('go');
+    const status = document.getElementById('status');
+
+    function setStatus(kind, html) {
+      status.className = 'status ' + kind;
+      status.innerHTML = html;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const url = input.value.trim();
+      if (!url) return;
+
+      button.disabled = true;
+      setStatus('busy', '<span class="spinner"></span> Fetching and converting… this can take a minute.');
+
+      try {
+        const resp = await fetch('/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+
+        const type = resp.headers.get('Content-Type') || '';
+        if (!resp.ok || type.includes('application/json')) {
+          let message = 'Something went wrong.';
+          try { message = (await resp.json()).error || message; } catch (_) {}
+          setStatus('err', '✕ ' + message);
+          return;
+        }
+
+        // Pull the filename out of the Content-Disposition header.
+        let filename = 'track.wav';
+        const cd = resp.headers.get('Content-Disposition') || '';
+        const match = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)/i);
+        if (match) filename = decodeURIComponent(match[1]);
+
+        const blob = await resp.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = objectUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(objectUrl);
+
+        setStatus('ok', '✓ Saved <strong>' + filename + '</strong> to your Downloads.');
+      } catch (err) {
+        setStatus('err', '✕ Network error: ' + err.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
