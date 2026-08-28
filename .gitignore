@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Downloaded audio & archives — don't commit music
+*.wav
+*.mp3
+*.m4a
+*.opus
+downloads/
+archive.txt

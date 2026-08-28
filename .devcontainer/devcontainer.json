@@ -1,0 +1,23 @@
+{
+  "name": "sc2wav",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+
+  // Install dependencies when the Codespace is created. ffmpeg comes bundled
+  // via the imageio-ffmpeg pip package, so nothing else is needed.
+  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt",
+
+  // The web UI runs on port 5000; forward it and label it.
+  "forwardPorts": [5000],
+  "portsAttributes": {
+    "5000": {
+      "label": "sc2wav web UI",
+      "onAutoForward": "openBrowser"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}

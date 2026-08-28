@@ -1,0 +1,16 @@
+# sc2wav dependencies
+# yt-dlp handles fetching audio from SoundCloud. It is updated often to keep up
+# with site changes, so keep it reasonably fresh.
+yt-dlp>=2024.1.0
+
+# imageio-ffmpeg ships a static ffmpeg binary, used automatically if no system
+# ffmpeg is on PATH — so no manual ffmpeg install is needed.
+imageio-ffmpeg>=0.4.9
+
+# Flask powers the browser UI (webapp.py). Only needed for the web interface;
+# the sc2wav.py command-line tool does not require it.
+Flask>=3.0.0
+
+# gunicorn is the production web server used when the app is hosted (Docker /
+# Render / etc.). Not needed for local `python webapp.py`.
+gunicorn>=21.2.0
