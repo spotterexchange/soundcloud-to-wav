@@ -196,17 +196,39 @@ def main() -> int:
             "so the bundled ffmpeg is available, or install ffmpeg system-wide.\n"
         )
 
-    url = f"http://{args.host}:{args.port}"
-    print(f"sc2wav web UI running at  {url}")
-    print("Your browser should open automatically. Press Ctrl+C here to stop.")
+    # In a GitHub Codespace the app must bind to all interfaces so the port can
+    # be forwarded, there's no local browser to open, and the public address is
+    # the forwarded URL rather than localhost.
+    in_codespace = os.environ.get("CODESPACES") == "true"
+    if in_codespace and args.host == "127.0.0.1":
+        args.host = "0.0.0.0"
 
-    # Pop the page open once the server is up, unless suppressed or the
-    # Flask debug reloader is spawning the parent process.
-    if not args.no_browser and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-        import threading
-        import webbrowser
+    if in_codespace:
+        name = os.environ.get("CODESPACE_NAME", "")
+        domain = os.environ.get(
+            "GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN", "app.github.dev"
+        )
+        forwarded = f"https://{name}-{args.port}.{domain}" if name else None
+        print("sc2wav is running in this Codespace.")
+        if forwarded:
+            print(f"Open this URL in your browser:  {forwarded}")
+        print(
+            "If it doesn't open, use the PORTS tab, find port "
+            f"{args.port}, and click the globe / 'Open in Browser'."
+        )
+        print("Press Ctrl+C here to stop.")
+    else:
+        url = f"http://{args.host}:{args.port}"
+        print(f"sc2wav web UI running at  {url}")
+        print("Your browser should open automatically. Press Ctrl+C here to stop.")
 
-        threading.Timer(1.0, lambda: webbrowser.open(url)).start()
+        # Pop the page open once the server is up, unless suppressed or the
+        # Flask debug reloader is spawning the parent process.
+        if not args.no_browser and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+            import threading
+            import webbrowser
+
+            threading.Timer(1.0, lambda: webbrowser.open(url)).start()
 
     app.run(host=args.host, port=args.port, debug=args.debug, threaded=True)
     return 0

@@ -18,6 +18,28 @@ the window to stop.
 > On macOS, the first time you may need to right-click the `.command` file →
 > **Open** to get past the security prompt.
 
+### 👉 All in your browser — GitHub Codespace (nothing installed locally)
+
+Prefer to run it entirely in the cloud? A [Codespace](https://github.com/features/codespaces)
+runs this repo on GitHub's servers, in your browser — no Python or anything else
+on your own machine.
+
+1. On this repo's GitHub page: **Code ▾ → Codespaces → Create codespace on
+   `<branch>`**.
+2. Wait for it to build (it installs everything automatically — about a minute).
+3. In the Terminal at the bottom, run:
+   ```bash
+   python webapp.py
+   ```
+4. A prompt pops up — click **Open in Browser** (or use the **PORTS** tab, port
+   5000). Paste a SoundCloud link, click **Download**, and the WAV saves to your
+   computer's Downloads folder. Drag it onto your USB from there.
+
+The download reaches your own computer because the page runs in your browser —
+even though the work happens in the cloud. Codespaces include a
+[free monthly quota](https://docs.github.com/billing/managing-billing-for-github-codespaces/about-billing-for-github-codespaces);
+stop the Codespace when you're done so it doesn't use hours.
+
 Other ways to use it — a [hosted web app](#2-host-it-on-the-web-no-local-machine-needed),
 the [command line](#5-command-line-options) — are covered below.
 
